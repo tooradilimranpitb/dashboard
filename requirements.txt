@@ -1,5 +1,28 @@
-streamlit
-pandas
-numpy
-matplotlib
-requests
+# ==============================================================================
+# PIP REQUIREMENTS FILE (requirements.txt)
+# Complete Dependency List for Streamlit Executive Analytics Dashboard (app.py)
+# ==============================================================================
+
+# --- Web Framework & Core UI ---
+streamlit>=1.30.0
+
+# --- High-Performance Database & Data Analytics ---
+duckdb>=0.9.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# --- Interactive Data Visualizations & Charts ---
+plotly>=5.18.0
+
+# --- Machine Learning, Clustering & Forecasting ---
+scikit-learn>=1.3.0
+statsmodels>=0.14.0
+
+# --- Automated Enterprise Reporting & File Generation ---
+reportlab>=4.0.0
+python-pptx>=0.6.21
+openpyxl>=3.1.0
+
+# --- Authentication, Security & Encryption ---
+bcrypt>=4.0.0
+cryptography>=41.0.0
