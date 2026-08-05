@@ -1098,8 +1098,7 @@ remaining_working_days = sum(
 # rather than blindly multiplying the average rate by every calendar day in the month.
 projected_month_end = (total_scanned_all + daily_run_rate * remaining_working_days) if has_data else 0.0
 
-default_target = round(max(active_dpas, 1) * 250 * days_in_month, -3) or 1_000_000
-monthly_target = load_monthly_target(selected_year, selected_sheet, default_target)
+monthly_target = load_monthly_target(selected_year, selected_sheet, 0)
 achievement_pct = (total_scanned_all / monthly_target * 100) if (monthly_target and has_data) else 0.0
 
 prev_year, prev_sheet, prev_total = get_previous_period_total(st.session_state["hierarchical_data"], selected_year, selected_sheet)
@@ -1136,7 +1135,7 @@ with tab1:
     if not has_data:
         kpi_cards_html = [
             render_kpi_card("description", "Total Pages", "0", delta_pct=-100.0 if prev_total else None, delta_label=f"vs last month" if not prev_sheet else f"vs {prev_sheet}", trend_values=[], status="bad", accent=DPA_TEAL),
-            render_kpi_card("flag", "Monthly Target", f"{int(monthly_target):,}", sublabel="Configured in main body", status="neutral", accent=DPA_NAVY),
+            render_kpi_card("flag", "Monthly Target", f"{int(monthly_target):,}" if monthly_target else "Not Set", sublabel="Configured in main body", status="neutral", accent=DPA_NAVY),
             render_kpi_card("verified", "Achievement %", "0.0%", delta_pct=-100.0, delta_label="vs target", trend_values=[], status="bad", accent=DPA_GREEN),
             render_kpi_card("person", "Avg Pages/DPA", "0", status="neutral", accent=DPA_TEAL),
             render_kpi_card("military_tech", "Best District", "", sublabel="0 pages", status="neutral", accent=DPA_GREEN),
@@ -1151,7 +1150,7 @@ with tab1:
     else:
         kpi_cards_html = [
             render_kpi_card("description", "Total Pages", f"{int(total_scanned_all):,}", delta_pct=prev_month_delta_pct, trend_values=trend_values, status=_ach_status(achievement_pct), accent=DPA_TEAL),
-            render_kpi_card("flag", "Monthly Target", f"{int(monthly_target):,}", sublabel="Configured in main body", status="neutral", accent=DPA_NAVY),
+            render_kpi_card("flag", "Monthly Target", f"{int(monthly_target):,}" if monthly_target else "Not Set", sublabel="Configured in main body", status="neutral", accent=DPA_NAVY),
             render_kpi_card("verified", "Achievement %", f"{achievement_pct:.1f}%", delta_pct=achievement_pct - 100, delta_label="vs target", trend_values=trend_values, status=_ach_status(achievement_pct), accent=DPA_GREEN),
             render_kpi_card("person", "Avg Pages/DPA", f"{avg_per_dpa:,.0f}", status="neutral", accent=DPA_TEAL),
             render_kpi_card("military_tech", "Best District", f"{best_district}", sublabel=f"{int(district_perf.max() if not district_perf.empty else 0):,} pages", status="good", accent=DPA_GREEN),
@@ -1409,7 +1408,7 @@ with tab1:
         # ===== SECTION 1 — Executive Target Overview =====
         st.markdown('<div class="tp-section-label">📌 SECTION 1 · Executive Target Overview</div>', unsafe_allow_html=True)
         s1_cards = [
-            render_kpi_card("flag", "Overall Monthly Target", f"{int(monthly_target):,}", status="neutral", accent=DPA_NAVY),
+            render_kpi_card("flag", "Overall Monthly Target", f"{int(monthly_target):,}" if monthly_target else "Not Set", status="neutral", accent=DPA_NAVY),
             render_kpi_card("history", "Previous Month Target", f"{int(prev_target_val):,}" if prev_target_val else "N/A", status="neutral", accent="#B08968"),
             render_kpi_card("military_tech", "Previous Month Achievement", f"{prev_achievement_val:.1f}%" if prev_achievement_val is not None else "N/A", status=(_ach_status(prev_achievement_val) if prev_achievement_val is not None else "neutral"), accent=DPA_AMBER),
             render_kpi_card("verified", "Current Achievement", f"{achievement_pct:.1f}%", status=_ach_status(achievement_pct), accent=DPA_GREEN),
@@ -1816,7 +1815,7 @@ if current_role in ["Supervisor", "Admin"]:
         if not filtered_melted_df.empty and has_data:
             perf_df = filtered_melted_df.groupby(["DISTRICT", "SUPERVISOR", "NAME"]).agg(Total=("PAGES", "sum"), Days_Active=("PAGES", lambda x: (x>0).sum())).reset_index()
             perf_df["Daily_Avg"] = perf_df["Total"] / perf_df["Days_Active"].replace(0, 1)
-            perf_df["Grade"] = (perf_df["Total"] / (monthly_target/max(active_dpas, 1)) * 100).apply(get_performance_grade)
+            perf_df["Grade"] = (perf_df["Total"] / ((monthly_target/max(active_dpas, 1)) or 1) * 100).apply(get_performance_grade)
             
             c1, c2 = st.columns(2)
             with c1:
