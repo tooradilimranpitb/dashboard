@@ -813,7 +813,10 @@ if auto_refresh:
 
 with st.sidebar.expander("📅 Period & Sheet Selector", expanded=True):
     available_years = list(st.session_state["hierarchical_data"].keys()) or ["2026"]
-    selected_year = st.selectbox("Select Year", available_years)
+    today_for_default = datetime.date.today()
+    current_year_str = str(today_for_default.year)
+    default_year_index = available_years.index(current_year_str) if current_year_str in available_years else 0
+    selected_year = st.selectbox("Select Year", available_years, index=default_year_index)
 
     def sheet_sort_key(name):
         lower_name = str(name).lower()
@@ -824,7 +827,14 @@ with st.sidebar.expander("📅 Period & Sheet Selector", expanded=True):
 
     raw_months = list(st.session_state["hierarchical_data"].get(selected_year, {}).keys())
     available_months = sorted(raw_months, key=sheet_sort_key) or ["jan-2026"]
-    selected_sheet = st.selectbox("Select Month / Report Sheet", available_months)
+
+    current_month_abbr = next((k for k, v in MONTH_MAP.items() if v == today_for_default.month), "jan")
+    default_month_index = next(
+        (i for i, m in enumerate(available_months)
+         if current_month_abbr in str(m).lower() and current_year_str in str(m).lower()),
+        len(available_months) - 1
+    )
+    selected_sheet = st.selectbox("Select Month / Report Sheet", available_months, index=default_month_index)
 
 current_sheet_dict = st.session_state["hierarchical_data"].get(selected_year, {})
 raw_df = current_sheet_dict.get(selected_sheet, pd.DataFrame(columns=["DISTRICT", "DPA NAME", "TOTAL PAGES"]))
