@@ -79,6 +79,88 @@ components.html(
     height=0,
 )
 
+# --- Left/Right scroll controls for the tab bar ---
+components.html(
+    """
+    <script>
+    (function () {
+      function addTabScrollControls() {
+        try {
+          const doc = window.parent.document;
+          const tabLists = doc.querySelectorAll('div[data-baseweb="tab-list"]');
+          tabLists.forEach(function (tabList) {
+            if (tabList.dataset.dpaScrollWired === '1') {
+              refreshState(tabList);
+              return;
+            }
+            tabList.dataset.dpaScrollWired = '1';
+            tabList.style.setProperty('overflow-x', 'auto', 'important');
+            tabList.style.setProperty('flex-wrap', 'nowrap', 'important');
+
+            const parent = tabList.parentElement;
+            if (!parent) return;
+
+            const wrapper = doc.createElement('div');
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.width = '100%';
+            wrapper.style.gap = '6px';
+
+            const leftBtn = doc.createElement('button');
+            leftBtn.innerHTML = '&#10094;';
+            leftBtn.className = 'dpa-tab-scroll-btn';
+            leftBtn.setAttribute('aria-label', 'Scroll tabs left');
+            leftBtn.type = 'button';
+
+            const rightBtn = doc.createElement('button');
+            rightBtn.innerHTML = '&#10095;';
+            rightBtn.className = 'dpa-tab-scroll-btn';
+            rightBtn.setAttribute('aria-label', 'Scroll tabs right');
+            rightBtn.type = 'button';
+
+            leftBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              tabList.scrollBy({ left: -240, behavior: 'smooth' });
+            });
+            rightBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              tabList.scrollBy({ left: 240, behavior: 'smooth' });
+            });
+
+            parent.insertBefore(wrapper, tabList);
+            wrapper.appendChild(leftBtn);
+            wrapper.appendChild(tabList);
+            wrapper.appendChild(rightBtn);
+
+            tabList.addEventListener('scroll', function () { refreshState(tabList); });
+            refreshState(tabList);
+          });
+        } catch (e) {}
+      }
+
+      function refreshState(tabList) {
+        try {
+          const wrapper = tabList.parentElement;
+          if (!wrapper) return;
+          const leftBtn = wrapper.querySelector('button[aria-label="Scroll tabs left"]');
+          const rightBtn = wrapper.querySelector('button[aria-label="Scroll tabs right"]');
+          if (leftBtn) leftBtn.disabled = tabList.scrollLeft <= 2;
+          if (rightBtn) rightBtn.disabled = tabList.scrollLeft >= (tabList.scrollWidth - tabList.clientWidth - 2);
+        } catch (e) {}
+      }
+
+      try {
+        const doc = window.parent.document;
+        const observer = new MutationObserver(addTabScrollControls);
+        observer.observe(doc.body, { childList: true, subtree: true });
+        addTabScrollControls();
+      } catch (e) {}
+    })();
+    </script>
+    """,
+    height=0,
+)
+
 # --- Load Google Material Symbols & FontAwesome Icons ---
 st.markdown(
     """
@@ -333,6 +415,15 @@ st.markdown(f"""
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] {{ font-family: 'Inter', -apple-system, sans-serif; }}
     h1, h2, h3, h4, .stTabs [data-baseweb="tab"] p {{ font-family: 'Sora', 'Inter', sans-serif !important; }}
+    .stTabs [data-baseweb="tab-list"] {{ scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }}
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {{ display: none; }}
+    .dpa-tab-scroll-btn {{
+        flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
+        border: 1px solid #D8DEE9; background: #FFFFFF; color: {DPA_NAVY};
+        font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: opacity 0.15s ease;
+    }}
+    .dpa-tab-scroll-btn:disabled {{ opacity: 0.3; cursor: default; }}
     .main {{ background-color: var(--background-color, {DPA_BG}); }}
     .st-key-dpa_header_banner {{
         background: linear-gradient(135deg, {DPA_NAVY} 0%, {DPA_NAVY_LIGHT} 60%, {DPA_TEAL_DARK} 140%);
