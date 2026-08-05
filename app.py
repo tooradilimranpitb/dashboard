@@ -191,7 +191,7 @@ def generate_pdf_report(title_text, subtitle_text, df):
 def generate_pptx_report(summary_dict):
     prs = Presentation()
     slide = prs.slides.add_slide(prs.slide_layouts[0])
-    slide.shapes.title.text = "Executive Analytics Package v2.0"
+    slide.shapes.title.text = "Executive Analytics Package"
     slide.placeholders[1].text = "Generated automatically by DPA Intelligence"
     
     slide2 = prs.slides.add_slide(prs.slide_layouts[1])
@@ -1114,7 +1114,7 @@ trend_values = daily_trend.tail(14).tolist() if has_data else []
 def _ach_status(pct): return "good" if pct >= 100 else "warn" if pct >= 75 else "bad"
 
 # --- Main Interface & Role-Based Tab Assignment ---
-st.subheader(f"Executive Analytics Center v2.0 — {str(selected_sheet).replace('_', ' ').title()} (Role: {st.session_state['user_role']})")
+st.subheader(f"Executive Analytics Center — {str(selected_sheet).replace('_', ' ').title()} (Role: {st.session_state['user_role']})")
 
 current_role = st.session_state.get("user_role", "Viewer")
 
